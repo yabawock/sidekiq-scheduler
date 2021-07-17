@@ -97,10 +97,11 @@ module SidekiqScheduler
     # @return [Boolean] true if the schedules key is set, false otherwise
     def self.schedule_exist?
       Sidekiq.redis do |r|
-        if r.respond_to?(:exists?)
-          r.exists?(:schedules)
+        case r.exists(:schedules)
+        when true, 1
+          true
         else
-          !!r.exists(:schedules)
+          false
         end
       end
     end

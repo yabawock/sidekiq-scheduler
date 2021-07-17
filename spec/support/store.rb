@@ -60,10 +60,11 @@ module SidekiqScheduler
 
     def self.exists(key)
       Sidekiq.redis do |r|
-        if r.respond_to?(:exists?)
-          r.exists?(key)
+        case r.exists(key)
+        when true, 1
+          true
         else
-          !!r.exists(key)
+          false
         end
       end
     end
