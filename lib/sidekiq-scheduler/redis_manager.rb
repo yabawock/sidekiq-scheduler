@@ -1,7 +1,10 @@
 module SidekiqScheduler
   module RedisManager
-
     REGISTERED_JOBS_THRESHOLD_IN_SECONDS = 24 * 60 * 60
+
+    # Use the exists? method if we're on a newer version of redis.
+    # redis-namespace >= 1.8 will always return true for `respond_to?(:exists?)`
+    REDIS_EXISTS_METHOD = Gem.loaded_specs['redis'].version < Gem::Version.new('4.2') ? :exists : :exists?
 
     # Returns the schedule of a given job
     #
@@ -96,13 +99,7 @@ module SidekiqScheduler
     #
     # @return [Boolean] true if the schedules key is set, false otherwise
     def self.schedule_exist?
-      Sidekiq.redis do |r|
-        if r.respond_to?(:exists?)
-          r.exists?(:schedules)
-        else
-          !!r.exists(:schedules)
-        end
-      end
+      Sidekiq.redis { |r| r.public_send(REDIS_EXISTS_METHOD, :schedules) }
     end
 
     # Returns all the schedule changes for a given time range.
